@@ -31,16 +31,24 @@
         #game-container {
             position: relative;
             width: 100%;
-            max-width: 800px; /* Limit max width */
-            aspect-ratio: 16 / 9; /* Maintain aspect ratio */
+            /* max-width: 800px; */ /* Let it fill more width */
+            height: 100%; /* Fill height */
+            max-height: 100vh; /* Ensure it doesn't exceed viewport height */
+            /* aspect-ratio: 16 / 9; */ /* Allow aspect ratio to adjust for better fit */
             margin: auto; /* Center horizontally */
             background-color: #000; /* Fallback background */
             overflow: hidden; /* Prevent joystick overflow issues */
+            display: flex; /* Use flex to center canvas */
+            justify-content: center;
+            align-items: center;
         }
         canvas {
             display: block; /* Initially hidden */
             width: 100%;
             height: 100%;
+            max-width: 100%; /* Ensure canvas doesn't overflow container */
+            max-height: 100%;
+            object-fit: contain; /* Maintain aspect ratio within container */
             background-color: #87CEEB; /* Sky blue */
         }
         #ui {
@@ -48,45 +56,45 @@
             top: 10px;
             left: 10px;
             right: 10px;
-            display: flex; /* Initially hidden */
+            display: none; /* Initially hidden */
             justify-content: space-between;
-            font-size: 16px;
+            font-size: clamp(10px, 2vw, 16px); /* Responsive font size */
             pointer-events: none; /* Allow clicks to pass through to canvas */
-            text-shadow: 2px 2px 4px #000000;
+            text-shadow: 1px 1px 2px #000000;
             z-index: 5;
         }
          #boss-health-ui {
             position: absolute;
-            top: 40px; /* Below score/lives */
+            top: clamp(30px, 5vh, 40px); /* Responsive top position */
             left: 50%;
             transform: translateX(-50%);
-            font-size: 14px;
+            font-size: clamp(9px, 1.8vw, 14px); /* Responsive font size */
             color: #ff4d4d; /* Reddish color for health */
             text-shadow: 1px 1px 2px #000000;
             display: none; /* Hidden initially */
             z-index: 5;
             pointer-events: none;
          }
-        #controls-overlay { /* New container for joystick and button */
+        #controls-overlay { /* Container for joystick and button */
             position: absolute;
             bottom: 0;
             left: 0;
             width: 100%;
-            height: 120px; /* Adjust height as needed */
+            height: clamp(80px, 15vh, 120px); /* Responsive height */
             display: none; /* Initially hidden */
             justify-content: space-between;
             align-items: center;
-            padding: 10px 20px;
+            padding: 5px 10px; /* Reduced padding */
             box-sizing: border-box;
             z-index: 10;
             pointer-events: none; /* Allow underlying elements (joystick zone) to receive events */
         }
         #joystick-zone {
             position: absolute;
-            bottom: 10px;
-            left: 10px;
-            width: 100px; /* Joystick area width */
-            height: 100px; /* Joystick area height */
+            bottom: 5px; /* Closer to edge */
+            left: 5px;  /* Closer to edge */
+            width: clamp(70px, 18vw, 100px); /* Responsive size */
+            height: clamp(70px, 18vw, 100px); /* Responsive size */
             /* background: rgba(255, 255, 255, 0.1); */ /* Optional: visualize zone */
             border-radius: 50%;
             pointer-events: auto; /* Enable touch events for this zone */
@@ -94,10 +102,10 @@
         }
          #shoot-button-zone {
              position: absolute;
-             bottom: 10px;
-             right: 10px;
-             width: 80px; /* Button area width */
-             height: 80px; /* Button area height */
+             bottom: 5px; /* Closer to edge */
+             right: 5px; /* Closer to edge */
+             width: clamp(60px, 15vw, 80px); /* Responsive size */
+             height: clamp(60px, 15vw, 80px); /* Responsive size */
              display: flex;
              justify-content: center;
              align-items: center;
@@ -111,17 +119,17 @@
             border: none;
             color: white;
             padding: 0; /* Remove padding, use width/height */
-            width: 70px; /* Fixed size */
-            height: 70px; /* Fixed size */
+            width: clamp(50px, 13vw, 70px); /* Responsive size */
+            height: clamp(50px, 13vw, 70px); /* Responsive size */
             text-align: center;
             text-decoration: none;
             display: flex; /* Center text */
             justify-content: center;
             align-items: center;
-            font-size: 12px; /* Smaller font */
+            font-size: clamp(8px, 2vw, 12px); /* Responsive font size */
             cursor: pointer;
             border-radius: 50%; /* Make it round */
-            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3); /* Smaller shadow */
             transition: background-color 0.3s, transform 0.1s;
             line-height: 1; /* Adjust line height */
              pointer-events: auto; /* Ensure button itself is interactive */
@@ -137,25 +145,27 @@
             transform: translate(-50%, -50%);
             background-color: rgba(0, 0, 0, 0.8); /* Darker background */
             color: white;
-            padding: 40px;
+            padding: clamp(20px, 5vw, 40px); /* Responsive padding */
             border-radius: 10px;
             text-align: center;
-            font-size: 24px;
+            font-size: clamp(16px, 4vw, 24px); /* Responsive font size */
             display: none; /* Hidden by default */
             z-index: 20;
             border: 2px solid #fff;
+            width: 80%; /* Limit width */
+            max-width: 400px;
         }
         #message-box button {
              font-family: 'Press Start 2P', cursive;
             background-color: #f44336; /* Red */
             border: none;
             color: white;
-            padding: 10px 20px;
+            padding: 10px 15px; /* Adjust padding */
             text-align: center;
             text-decoration: none;
             display: inline-block;
-            font-size: 16px;
-            margin-top: 20px;
+            font-size: clamp(12px, 3vw, 16px); /* Responsive font size */
+            margin-top: 15px; /* Adjust margin */
             cursor: pointer;
             border-radius: 5px;
             transition: background-color 0.3s;
@@ -177,25 +187,27 @@
             align-items: center;
             z-index: 30;
             text-align: center;
+            padding: 10px;
+            box-sizing: border-box;
         }
         #start-screen h1 {
-            font-size: 48px;
-            margin-bottom: 40px;
+            font-size: clamp(28px, 8vw, 48px); /* Responsive font size */
+            margin-bottom: 30px;
             color: #00ff00; /* Green title */
-            text-shadow: 3px 3px 0px #006400; /* Dark green shadow */
+            text-shadow: 2px 2px 0px #006400; /* Dark green shadow */
         }
         .difficulty-button {
             font-family: 'Press Start 2P', cursive;
             background-color: #007bff; /* Blue */
             border: 2px solid #fff;
             color: white;
-            padding: 15px 30px;
-            font-size: 18px;
+            padding: clamp(10px, 3vh, 15px) clamp(20px, 5vw, 30px); /* Responsive padding */
+            font-size: clamp(14px, 3.5vw, 18px); /* Responsive font size */
             cursor: pointer;
             border-radius: 5px;
-            margin: 10px;
+            margin: 8px; /* Adjust margin */
             transition: background-color 0.3s, transform 0.1s;
-            min-width: 150px;
+            min-width: 120px;
         }
         .difficulty-button:hover {
             background-color: #0056b3; /* Darker blue */
@@ -205,8 +217,62 @@
          }
 
          /* Initially hide game elements */
-        #gameCanvas, #ui, #controls-overlay { /* Updated to hide controls-overlay */
+        #gameCanvas, #ui, #controls-overlay {
             display: none;
+        }
+
+         /* --- Landscape Mobile Adjustments --- */
+         @media (orientation: landscape) and (max-height: 500px) {
+            #ui {
+                top: 5px;
+                left: 5px;
+                right: 5px;
+                font-size: 10px; /* Smaller font in landscape */
+            }
+            #boss-health-ui {
+                 top: 25px; /* Position below smaller UI */
+                 font-size: 9px; /* Smaller font */
+            }
+            #controls-overlay {
+                height: 80px; /* Reduced height */
+                padding: 5px;
+            }
+            #joystick-zone {
+                width: 70px;
+                height: 70px;
+                bottom: 5px;
+                left: 5px;
+            }
+            #shoot-button-zone {
+                width: 60px;
+                height: 60px;
+                bottom: 5px;
+                right: 5px;
+            }
+            .control-button { /* Shoot button */
+                width: 50px;
+                height: 50px;
+                font-size: 8px;
+            }
+             #start-screen h1 {
+                 font-size: 24px;
+                 margin-bottom: 15px;
+             }
+             .difficulty-button {
+                 padding: 8px 15px;
+                 font-size: 12px;
+                 min-width: 100px;
+                 margin: 5px;
+             }
+             #message-box {
+                 padding: 15px;
+                 font-size: 14px;
+             }
+              #message-box button {
+                 padding: 8px 12px;
+                 font-size: 10px;
+                 margin-top: 10px;
+             }
         }
 
     </style>
@@ -259,7 +325,6 @@
             w: false, a: false, s: false, d: false, space: false,
             ArrowUp: false, ArrowLeft: false, ArrowDown: false, ArrowRight: false
         };
-        // Removed touchControls object, replaced by joystickDirection
 
         // Game constants (base values, will be modified by difficulty)
         const PLAYER_SPEED = 0.2;
@@ -288,6 +353,7 @@
 
             // Camera
             const container = document.getElementById('game-container');
+            // Use container dimensions directly for aspect ratio initially
             const aspect = container.clientWidth / container.clientHeight;
             camera = new THREE.PerspectiveCamera(75, aspect, 0.1, 1000);
             camera.position.set(0, 5, 15); // Positioned behind and slightly above origin
@@ -295,7 +361,9 @@
 
             // Renderer
             renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('gameCanvas'), antialias: true });
-            renderer.setSize(container.clientWidth, container.clientHeight);
+            // Set initial size based on canvas element size
+            const canvas = document.getElementById('gameCanvas');
+            renderer.setSize(canvas.clientWidth, canvas.clientHeight);
             renderer.setPixelRatio(window.devicePixelRatio); // Adjust for high DPI screens
 
             // Lighting
@@ -330,6 +398,9 @@
 
 
             gameInitialized = true; // Mark as initialized
+
+            // Initial resize call to set correct canvas size
+             onWindowResize();
         }
 
         // --- Game Start Function ---
@@ -341,7 +412,11 @@
             // Initialize if not already done
             if (!gameInitialized) {
                 init();
+            } else {
+                // If already initialized, ensure canvas/renderer size is correct
+                onWindowResize();
             }
+
 
             // Reset game state
             resetGame(); // Use a separate reset function
@@ -457,12 +532,16 @@
              if (joystickManager) {
                  joystickManager.destroy();
              }
+             const joystickZone = document.getElementById('joystick-zone');
              const options = {
-                zone: document.getElementById('joystick-zone'),
+                zone: joystickZone,
                 mode: 'static', // Keep joystick in a fixed position
                 position: { left: '50%', top: '50%' }, // Center within the zone
-                color: 'white',
-                size: 80 // Size of the joystick knob
+                color: 'rgba(255, 255, 255, 0.5)', // Semi-transparent white
+                 size: joystickZone.clientWidth * 0.8, // Adjust size based on zone
+                 threshold: 0.1, // Movement threshold
+                 fadeTime: 250, // Fade time for joystick appearance
+                 dynamicPage: true // Adjusts to page size changes (useful with resize)
              };
              joystickManager = nipplejs.create(options);
 
@@ -470,12 +549,13 @@
                  if (!gameRunning) return;
                  // Normalize the vector and store direction
                  const angle = data.angle.radian;
-                 const force = Math.min(data.force, 1.0); // Clamp force to max 1
+                 // Use distance instead of force for potentially smoother control
+                 const distance = Math.min(data.distance / (options.size / 2), 1.0); // Normalize distance
 
-                 // Only update direction if force is significant
-                 if (force > JOYSTICK_THRESHOLD) {
-                    joystickDirection.x = Math.cos(angle) * force;
-                    joystickDirection.y = Math.sin(angle) * force;
+                 // Only update direction if movement is significant
+                 if (distance > JOYSTICK_THRESHOLD) {
+                    joystickDirection.x = Math.cos(angle) * distance;
+                    joystickDirection.y = Math.sin(angle) * distance;
                  } else {
                      // Reset direction if joystick returns to center
                      joystickDirection.x = 0;
@@ -519,30 +599,30 @@
              if (!gameRunning || !player) return;
 
             // --- Joystick Input ---
+            // Use the raw joystickDirection values which are already scaled between -1 and 1
             let moveX = joystickDirection.x;
             let moveY = joystickDirection.y; // NippleJS y is positive up
 
             // --- Keyboard Input (Overrides Joystick if pressed) ---
             if (keys.w || keys.ArrowUp) moveY = 1;
-            if (keys.s || keys.ArrowDown) moveY = -1;
+            else if (keys.s || keys.ArrowDown) moveY = -1; // Use else if to prevent cancelling joystick if key is released
+
             if (keys.a || keys.ArrowLeft) moveX = -1;
-            if (keys.d || keys.ArrowRight) moveX = 1;
+            else if (keys.d || keys.ArrowRight) moveX = 1; // Use else if
 
             // --- Apply Movement ---
-            // Move player based on combined/prioritized input
-            // Horizontal movement
-            if (moveX > JOYSTICK_THRESHOLD && player.position.x < PLAYER_BOUNDS.x) {
-                player.position.x += PLAYER_SPEED;
-            } else if (moveX < -JOYSTICK_THRESHOLD && player.position.x > -PLAYER_BOUNDS.x) {
-                player.position.x -= PLAYER_SPEED;
-            }
+             // Use the magnitude of the combined input vector for speed scaling if desired,
+             // or just apply directly based on PLAYER_SPEED. Direct application is simpler.
 
-            // Vertical movement
-            if (moveY > JOYSTICK_THRESHOLD && player.position.y < PLAYER_BOUNDS.y + 2) {
-                player.position.y += PLAYER_SPEED;
-            } else if (moveY < -JOYSTICK_THRESHOLD && player.position.y > 1) {
-                player.position.y -= PLAYER_SPEED;
-            }
+            // Horizontal movement
+            const targetX = player.position.x + moveX * PLAYER_SPEED;
+            player.position.x = THREE.MathUtils.clamp(targetX, -PLAYER_BOUNDS.x, PLAYER_BOUNDS.x);
+
+
+            // Vertical movement (NippleJS y is positive up, game y is positive up)
+            const targetY = player.position.y + moveY * PLAYER_SPEED;
+             player.position.y = THREE.MathUtils.clamp(targetY, 1, PLAYER_BOUNDS.y + 2); // Clamp between min height and max height
+
 
             // Shooting is handled on key up / button press events, not in the main loop handleInput
         }
@@ -668,7 +748,7 @@
             boss.position.z += BOSS_SPEED;
 
             // Optional: Add side-to-side or other movement patterns here
-            // boss.position.x = Math.sin(Date.now() * 0.001) * PLAYER_BOUNDS.x * 0.8;
+             boss.position.x = Math.sin(Date.now() * 0.0005) * PLAYER_BOUNDS.x * 0.8; // Slow sine wave movement
 
 
             // Check if boss passed the player (shouldn't happen if player fights)
@@ -684,9 +764,9 @@
             bossHealth -= amount;
             updateBossHealthUI();
 
-            // Add visual feedback (e.g., flash white) - Optional
-            // boss.material.color.setHex(0xffffff);
-            // setTimeout(() => { if(boss) boss.material.color.setHex(0x0000ff); }, 100);
+            // Add visual feedback (flash white)
+             boss.material.color.setHex(0xffffff);
+             setTimeout(() => { if(boss) boss.material.color.setHex(0x0000ff); }, 100);
 
 
             if (bossHealth <= 0) {
@@ -716,57 +796,80 @@
          function checkCollisions() {
              if (!gameRunning || !player) return; // Exit if game over or player missing
 
-            const playerBox = new THREE.Box3().setFromObject(player);
+             // Use bounding spheres for potentially better (though less accurate) performance
+             const playerSphere = new THREE.Sphere();
+             player.geometry.computeBoundingSphere(); // Ensure sphere is calculated
+             playerSphere.copy(player.geometry.boundingSphere).applyMatrix4(player.matrixWorld);
+             playerSphere.radius *= 0.8; // Slightly smaller radius for player hitbox
 
-            // Bullets vs Enemies
+
+            // Bullets vs Enemies / Boss
             for (let i = bullets.length - 1; i >= 0; i--) {
                 const bullet = bullets[i];
-                // Ensure bullet still exists (might be removed in another check)
                 if (!bullet || !bullet.parent) continue;
 
-                const bulletBox = new THREE.Box3().setFromObject(bullet);
+                const bulletSphere = new THREE.Sphere();
+                bullet.geometry.computeBoundingSphere();
+                bulletSphere.copy(bullet.geometry.boundingSphere).applyMatrix4(bullet.matrixWorld);
+
+
+                let hit = false; // Flag to track if bullet hit something
 
                 // Check collision with normal enemies
                 for (let j = enemies.length - 1; j >= 0; j--) {
                     const enemy = enemies[j];
-                     if (!enemy || !enemy.parent) continue; // Ensure enemy exists
+                     if (!enemy || !enemy.parent) continue;
 
-                    const enemyBox = new THREE.Box3().setFromObject(enemy);
+                    const enemySphere = new THREE.Sphere();
+                    enemy.geometry.computeBoundingSphere();
+                    enemySphere.copy(enemy.geometry.boundingSphere).applyMatrix4(enemy.matrixWorld);
+                    enemySphere.radius *= 0.8; // Slightly smaller radius for enemy hitbox
 
-                    if (bulletBox.intersectsBox(enemyBox)) {
+
+                    if (bulletSphere.intersectsSphere(enemySphere)) {
                         scene.remove(bullet);
                         bullets.splice(i, 1);
                         scene.remove(enemy);
                         enemies.splice(j, 1);
-
                         score += 10;
                         updateUI();
-                        // Important: break inner loop once bullet hits something
-                        i = -1; // Exit outer loop as well since bullet is gone
-                        break;
+                        hit = true; // Mark as hit
+                        break; // Exit enemy loop
                     }
                 }
-                 // Check collision with Boss only if bullet still exists
-                 if (i >= 0 && bossActive && boss) {
-                     const bossBox = new THREE.Box3().setFromObject(boss);
-                     if (bulletBox.intersectsBox(bossBox)) {
+
+                 // Check collision with Boss only if bullet didn't hit an enemy
+                 if (!hit && bossActive && boss) {
+                     const bossSphere = new THREE.Sphere();
+                     boss.geometry.computeBoundingSphere();
+                     bossSphere.copy(boss.geometry.boundingSphere).applyMatrix4(boss.matrixWorld);
+                     bossSphere.radius *= 0.9; // Adjust boss hitbox if needed
+
+                     if (bulletSphere.intersectsSphere(bossSphere)) {
                          scene.remove(bullet);
                          bullets.splice(i, 1);
-                         damageBoss(1); // Boss takes 1 damage per hit
-                         // Important: break inner loop once bullet hits something
-                         i = -1; // Exit outer loop as well since bullet is gone
-                         break;
+                         damageBoss(1);
+                         hit = true; // Mark as hit
                      }
+                 }
+
+                 if (hit) {
+                     // If bullet hit something, continue to the next bullet (outer loop)
+                     continue;
                  }
             }
 
             // Player vs Enemies
             for (let j = enemies.length - 1; j >= 0; j--) {
                 const enemy = enemies[j];
-                 if (!enemy || !enemy.parent) continue; // Ensure enemy exists
-                const enemyBox = new THREE.Box3().setFromObject(enemy);
+                 if (!enemy || !enemy.parent) continue;
 
-                if (playerBox.intersectsBox(enemyBox)) {
+                 const enemySphere = new THREE.Sphere();
+                 enemy.geometry.computeBoundingSphere();
+                 enemySphere.copy(enemy.geometry.boundingSphere).applyMatrix4(enemy.matrixWorld);
+                 enemySphere.radius *= 0.8; // Use same smaller radius
+
+                if (playerSphere.intersectsSphere(enemySphere)) {
                     scene.remove(enemy);
                     enemies.splice(j, 1);
                     playerHit();
@@ -776,10 +879,13 @@
 
              // Player vs Boss
             if (bossActive && boss) {
-                const bossBox = new THREE.Box3().setFromObject(boss);
-                if (playerBox.intersectsBox(bossBox)) {
-                    // Player hit boss - instant death or damage? Let's do damage.
-                    removeBoss(); // Boss disappears on collision for now
+                const bossSphere = new THREE.Sphere();
+                boss.geometry.computeBoundingSphere();
+                bossSphere.copy(boss.geometry.boundingSphere).applyMatrix4(boss.matrixWorld);
+                bossSphere.radius *= 0.9; // Use same boss hitbox
+
+                if (playerSphere.intersectsSphere(bossSphere)) {
+                    removeBoss(); // Boss disappears on collision
                     playerHit();
                 }
             }
@@ -789,9 +895,12 @@
              if (!gameRunning) return; // Avoid multiple hits after game over
              lives--;
              updateUI();
-             // Add brief visual feedback (e.g., flash player) - Optional
-             // player.material.color.setHex(0xff0000);
-             // setTimeout(() => { if(player) player.material.color.setHex(0xffffff); }, 200);
+             // Add brief visual feedback (flash red)
+             if(player) {
+                 player.material.color.setHex(0xff0000);
+                 setTimeout(() => { if(player) player.material.color.setHex(0xffffff); }, 150);
+             }
+
 
              if (lives <= 0) {
                  gameOver();
@@ -849,18 +958,37 @@
              if (!renderer || !camera || !gameInitialized) return;
 
             const container = document.getElementById('game-container');
-            const width = container.clientWidth;
-            const height = container.clientHeight;
+            const canvas = document.getElementById('gameCanvas');
+            let width = container.clientWidth;
+            let height = container.clientHeight;
 
-            camera.aspect = width / height;
-            camera.updateProjectionMatrix();
-            renderer.setSize(width, height);
+            // Adjust canvas style size to fit container while maintaining aspect ratio
+            const targetAspect = 16 / 9; // Desired game aspect ratio
+            const containerAspect = width / height;
 
-            // Optional: Re-initialize or reposition joystick if needed on resize
-            // if (gameRunning && joystickManager) {
-            //     joystickManager.destroy();
-            //     setupJoystick();
-            // }
+            if (containerAspect > targetAspect) {
+                // Container is wider than game aspect ratio, height is the limiting factor
+                 canvas.style.width = `${height * targetAspect}px`;
+                 canvas.style.height = `${height}px`;
+            } else {
+                 // Container is taller than game aspect ratio, width is the limiting factor
+                 canvas.style.width = `${width}px`;
+                 canvas.style.height = `${width / targetAspect}px`;
+            }
+
+             // Update renderer size to match the *actual* canvas size
+             renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+
+             // Update camera aspect ratio based on the *actual* canvas dimensions
+             camera.aspect = canvas.clientWidth / canvas.clientHeight;
+             camera.updateProjectionMatrix();
+
+
+            // Re-initialize or reposition joystick if needed on resize
+             if (gameRunning && joystickManager) {
+                 joystickManager.destroy(); // Destroy and recreate to adjust size/position
+                 setupJoystick();
+             }
         }
 
         // --- Start ---
