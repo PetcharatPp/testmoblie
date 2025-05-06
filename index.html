@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"> <title>Space Shoot</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/nipplejs/0.10.1/nipplejs.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #000;
+            font-family: 'Press Start 2P', cursive;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            /* Prevent text selection */
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            /* Prevent pull-to-refresh and other touch gestures */
+             touch-action: none;
+            -webkit-touch-callout: none; /* Disable callouts (e.g., save image) */
+            -webkit-tap-highlight-color: transparent; /* Disable tap highlight */
+        }
+        #game-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px; /* Limit max width */
+            aspect-ratio: 16 / 9; /* Maintain aspect ratio */
+            margin: auto; /* Center horizontally */
+            background-color: #000; /* Fallback background */
+            overflow: hidden; /* Prevent joystick overflow issues */
+        }
+        canvas {
+            display: block; /* Initially hidden */
+            width: 100%;
+            height: 100%;
+            background-color: #87CEEB; /* Sky blue */
+        }
+        #ui {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            display: flex; /* Initially hidden */
+            justify-content: space-between;
+            font-size: 16px;
+            pointer-events: none; /* Allow clicks to pass through to canvas */
+            text-shadow: 2px 2px 4px #000000;
+            z-index: 5;
+        }
+         #boss-health-ui {
+            position: absolute;
+            top: 40px; /* Below score/lives */
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 14px;
+            color: #ff4d4d; /* Reddish color for health */
+            text-shadow: 1px 1px 2px #000000;
+            display: none; /* Hidden initially */
+            z-index: 5;
+            pointer-events: none;
+         }
+        #controls-overlay { /* New container for joystick and button */
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 120px; /* Adjust height as needed */
+            display: none; /* Initially hidden */
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            box-sizing: border-box;
+            z-index: 10;
+            pointer-events: none; /* Allow underlying elements (joystick zone) to receive events */
+        }
+        #joystick-zone {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            width: 100px; /* Joystick area width */
+            height: 100px; /* Joystick area height */
+            /* background: rgba(255, 255, 255, 0.1); */ /* Optional: visualize zone */
+            border-radius: 50%;
+            pointer-events: auto; /* Enable touch events for this zone */
+            z-index: 11; /* Above controls overlay background */
+        }
+         #shoot-button-zone {
+             position: absolute;
+             bottom: 10px;
+             right: 10px;
+             width: 80px; /* Button area width */
+             height: 80px; /* Button area height */
+             display: flex;
+             justify-content: center;
+             align-items: center;
+             pointer-events: auto; /* Enable touch events for this zone */
+             z-index: 11;
+         }
+
+        .control-button { /* Style for the Shoot button */
+            font-family: 'Press Start 2P', cursive;
+            background-color: #f44336; /* Red */
+            border: none;
+            color: white;
+            padding: 0; /* Remove padding, use width/height */
+            width: 70px; /* Fixed size */
+            height: 70px; /* Fixed size */
+            text-align: center;
+            text-decoration: none;
+            display: flex; /* Center text */
+            justify-content: center;
+            align-items: center;
+            font-size: 12px; /* Smaller font */
+            cursor: pointer;
+            border-radius: 50%; /* Make it round */
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            transition: background-color 0.3s, transform 0.1s;
+            line-height: 1; /* Adjust line height */
+             pointer-events: auto; /* Ensure button itself is interactive */
+        }
+        .control-button:active {
+            background-color: #c33025; /* Darker red */
+            transform: scale(0.95);
+        }
+        #message-box {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.8); /* Darker background */
+            color: white;
+            padding: 40px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 24px;
+            display: none; /* Hidden by default */
+            z-index: 20;
+            border: 2px solid #fff;
+        }
+        #message-box button {
+             font-family: 'Press Start 2P', cursive;
+            background-color: #f44336; /* Red */
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin-top: 20px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+         #message-box button:hover {
+             background-color: #d32f2f; /* Darker red on hover */
+         }
+
+        #start-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9); /* Semi-transparent black */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 30;
+            text-align: center;
+        }
+        #start-screen h1 {
+            font-size: 48px;
+            margin-bottom: 40px;
+            color: #00ff00; /* Green title */
+            text-shadow: 3px 3px 0px #006400; /* Dark green shadow */
+        }
+        .difficulty-button {
+            font-family: 'Press Start 2P', cursive;
+            background-color: #007bff; /* Blue */
+            border: 2px solid #fff;
+            color: white;
+            padding: 15px 30px;
+            font-size: 18px;
+            cursor: pointer;
+            border-radius: 5px;
+            margin: 10px;
+            transition: background-color 0.3s, transform 0.1s;
+            min-width: 150px;
+        }
+        .difficulty-button:hover {
+            background-color: #0056b3; /* Darker blue */
+        }
+         .difficulty-button:active {
+             transform: scale(0.95);
+         }
+
+         /* Initially hide game elements */
+        #gameCanvas, #ui, #controls-overlay { /* Updated to hide controls-overlay */
+            display: none;
+        }
+
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <div id="start-screen">
+            <h1>Space Shoot</h1>
+            <button class="difficulty-button" onclick="startGame('easy')">Easy</button>
+            <button class="difficulty-button" onclick="startGame('normal')">Normal</button>
+            <button class="difficulty-button" onclick="startGame('hard')">Hard</button>
+        </div>
+        <canvas id="gameCanvas"></canvas>
+        <div id="ui">
+            <div id="score">Score: 0</div>
+            <div id="lives">Lives: 3</div>
+        </div>
+         <div id="boss-health-ui">Boss Health: 10</div>
+         <div id="message-box">
+            <p id="message-text"></p>
+            <button id="restart-button">Restart</button>
+         </div>
+         <div id="controls-overlay">
+             <div id="joystick-zone"></div>
+             <div id="shoot-button-zone">
+                 <button class="control-button" id="btn-shoot">Shoot</button>
+             </div>
+         </div>
+    </div>
+
+
+    <script>
+        // --- Three.js Setup ---
+        let scene, camera, renderer;
+        let player, ground;
+        const bullets = [];
+        const enemies = [];
+        let boss = null; // Boss object
+        let bossHealth = 10;
+        let bossActive = false;
+        let score = 0;
+        let lives = 3;
+        let gameRunning = false; // Start paused
+        let gameInitialized = false; // Track if init() has run
+        let joystickManager = null; // To hold the joystick instance
+        let joystickDirection = { x: 0, y: 0 }; // Store joystick input
+
+        // Movement state
+        const keys = {
+            w: false, a: false, s: false, d: false, space: false,
+            ArrowUp: false, ArrowLeft: false, ArrowDown: false, ArrowRight: false
+        };
+        // Removed touchControls object, replaced by joystickDirection
+
+        // Game constants (base values, will be modified by difficulty)
+        const PLAYER_SPEED = 0.2;
+        const BULLET_SPEED = 0.8;
+        let ENEMY_SPEED = 0.1;
+        let ENEMY_SPAWN_RATE = 100; // Lower is faster (frames)
+        let enemySpawnCounter = 0;
+        const PLAYER_BOUNDS = { x: 12, y: 6 }; // Max distance from center
+        const BOSS_TRIGGER_SCORE = 50;
+        const BOSS_BASE_HEALTH = 10;
+        const BOSS_SPEED = 0.05; // Boss moves slower
+        const JOYSTICK_THRESHOLD = 0.1; // Minimum joystick movement to register
+
+        // Difficulty settings
+        const difficulties = {
+            easy: { enemySpeed: 0.08, spawnRate: 120 },
+            normal: { enemySpeed: 0.1, spawnRate: 100 },
+            hard: { enemySpeed: 0.15, spawnRate: 70 }
+        };
+
+        // --- Initialization ---
+        function init() {
+            // Scene
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x87CEEB); // Sky blue
+
+            // Camera
+            const container = document.getElementById('game-container');
+            const aspect = container.clientWidth / container.clientHeight;
+            camera = new THREE.PerspectiveCamera(75, aspect, 0.1, 1000);
+            camera.position.set(0, 5, 15); // Positioned behind and slightly above origin
+            camera.lookAt(0, 3, 0); // Look slightly downwards
+
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('gameCanvas'), antialias: true });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.setPixelRatio(window.devicePixelRatio); // Adjust for high DPI screens
+
+            // Lighting
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(5, 10, 7.5);
+            scene.add(directionalLight);
+
+            // Ground
+            const groundGeometry = new THREE.PlaneGeometry(100, 200); // Wider and longer
+            const groundMaterial = new THREE.MeshLambertMaterial({ color: 0x228B22 }); // Forest green
+            ground = new THREE.Mesh(groundGeometry, groundMaterial);
+            ground.rotation.x = -Math.PI / 2; // Rotate to be flat
+            ground.position.y = 0;
+            scene.add(ground);
+
+            // Player
+            const playerGeometry = new THREE.BoxGeometry(1, 1, 1);
+            const playerMaterial = new THREE.MeshLambertMaterial({ color: 0xffffff }); // White
+            player = new THREE.Mesh(playerGeometry, playerMaterial);
+            player.position.set(0, 2, 10); // Start position in front of camera base
+            scene.add(player);
+
+            // Event Listeners
+            window.addEventListener('keydown', onKeyDown);
+            window.addEventListener('keyup', onKeyUp);
+            window.addEventListener('resize', onWindowResize);
+
+            // Touch Controls Setup (Shoot Button Only Now)
+            setupShootButton();
+
+
+            gameInitialized = true; // Mark as initialized
+        }
+
+        // --- Game Start Function ---
+        function startGame(difficulty) {
+            // Set difficulty parameters
+            ENEMY_SPEED = difficulties[difficulty].enemySpeed;
+            ENEMY_SPAWN_RATE = difficulties[difficulty].spawnRate;
+
+            // Initialize if not already done
+            if (!gameInitialized) {
+                init();
+            }
+
+            // Reset game state
+            resetGame(); // Use a separate reset function
+
+            gameRunning = true;
+
+            // Hide start screen, show game elements
+            document.getElementById('start-screen').style.display = 'none';
+            document.getElementById('gameCanvas').style.display = 'block';
+            document.getElementById('ui').style.display = 'flex';
+            document.getElementById('controls-overlay').style.display = 'flex'; // Show controls overlay
+            document.getElementById('message-box').style.display = 'none'; // Ensure message box is hidden
+
+            // Initialize Joystick
+            setupJoystick();
+
+            // Start Game Loop
+            animate();
+        }
+
+         // --- Game Reset Function ---
+        function resetGame() {
+             score = 0;
+            lives = 3;
+            gameRunning = true; // Ensure game is set to run
+            bossActive = false;
+            bossHealth = BOSS_BASE_HEALTH;
+            if (boss) {
+                scene.remove(boss); // Remove boss if it exists from previous game
+                boss = null;
+            }
+            if (joystickManager) { // Destroy previous joystick if exists
+                joystickManager.destroy();
+                joystickManager = null;
+            }
+            joystickDirection = { x: 0, y: 0 }; // Reset joystick direction
+
+
+            keys.w = keys.a = keys.s = keys.d = keys.space = false; // Reset keys
+
+            // Clear existing bullets and enemies
+            bullets.forEach(b => scene.remove(b));
+            enemies.forEach(e => scene.remove(e));
+            bullets.length = 0;
+            enemies.length = 0;
+
+            // Reset player position
+            if (player) { // Check if player exists (might not on first load error)
+                 player.position.set(0, 2, 10);
+            }
+
+
+            // Hide message box and boss health, update UI
+            document.getElementById('message-box').style.display = 'none';
+            document.getElementById('boss-health-ui').style.display = 'none';
+            updateUI();
+        }
+
+
+        // --- Game Loop ---
+        let animationFrameId = null; // Store animation frame request id
+        function animate() {
+            if (!gameRunning) {
+                 if (animationFrameId) {
+                    cancelAnimationFrame(animationFrameId); // Stop the loop if game not running
+                    animationFrameId = null;
+                 }
+                 return;
+            }
+
+            animationFrameId = requestAnimationFrame(animate); // Store the id
+
+            handleInput();
+            movePlayer();
+            moveBullets();
+            moveEnemies();
+            if (!bossActive) { // Only spawn normal enemies if boss is not active
+                 spawnEnemies();
+            } else {
+                moveBoss(); // Move the boss if active
+            }
+            checkCollisions();
+            checkBossSpawn(); // Check if it's time to spawn the boss
+
+            renderer.render(scene, camera);
+        }
+
+        // --- Input Handling ---
+        function onKeyDown(event) {
+             if (!gameRunning) return; // Ignore input if game not running
+            switch (event.key.toLowerCase()) {
+                case 'w': case 'arrowup': keys.w = true; break;
+                case 'a': case 'arrowleft': keys.a = true; break;
+                case 's': case 'arrowdown': keys.s = true; break;
+                case 'd': case 'arrowright': keys.d = true; break;
+                case ' ': keys.space = true; break; // Space bar
+            }
+        }
+
+        function onKeyUp(event) {
+             if (!gameRunning) return; // Ignore input if game not running
+            switch (event.key.toLowerCase()) {
+                case 'w': case 'arrowup': keys.w = false; break;
+                case 'a': case 'arrowleft': keys.a = false; break;
+                case 's': case 'arrowdown': keys.s = false; break;
+                case 'd': case 'arrowright': keys.d = false; break;
+                case ' ': keys.space = false; shootBullet(); break; // Shoot on release
+            }
+        }
+
+        function setupJoystick() {
+             // Ensure previous joystick is destroyed before creating a new one
+             if (joystickManager) {
+                 joystickManager.destroy();
+             }
+             const options = {
+                zone: document.getElementById('joystick-zone'),
+                mode: 'static', // Keep joystick in a fixed position
+                position: { left: '50%', top: '50%' }, // Center within the zone
+                color: 'white',
+                size: 80 // Size of the joystick knob
+             };
+             joystickManager = nipplejs.create(options);
+
+             joystickManager.on('move', function (evt, data) {
+                 if (!gameRunning) return;
+                 // Normalize the vector and store direction
+                 const angle = data.angle.radian;
+                 const force = Math.min(data.force, 1.0); // Clamp force to max 1
+
+                 // Only update direction if force is significant
+                 if (force > JOYSTICK_THRESHOLD) {
+                    joystickDirection.x = Math.cos(angle) * force;
+                    joystickDirection.y = Math.sin(angle) * force;
+                 } else {
+                     // Reset direction if joystick returns to center
+                     joystickDirection.x = 0;
+                     joystickDirection.y = 0;
+                 }
+             });
+
+             joystickManager.on('end', function () {
+                 // Reset direction when joystick is released
+                 joystickDirection.x = 0;
+                 joystickDirection.y = 0;
+             });
+        }
+
+         function setupShootButton() {
+            const btnShoot = document.getElementById('btn-shoot');
+            const endEvent = ('ontouchend' in window) ? 'touchend' : 'mouseup';
+
+            // Shoot on click/tap end for the button
+            btnShoot.addEventListener(endEvent, (e) => {
+                 if (gameRunning) {
+                    e.preventDefault(); // Prevent potential double actions
+                    shootBullet();
+                 }
+            });
+             // Prevent default touch behaviors like scrolling or zooming on the button
+            btnShoot.addEventListener('touchstart', (e) => {
+                if (gameRunning) {
+                    e.preventDefault();
+                }
+            }, { passive: false });
+             btnShoot.addEventListener('touchmove', (e) => {
+                 if (gameRunning) {
+                     e.preventDefault();
+                 }
+             }, { passive: false });
+        }
+
+
+        function handleInput() {
+             if (!gameRunning || !player) return;
+
+            // --- Joystick Input ---
+            let moveX = joystickDirection.x;
+            let moveY = joystickDirection.y; // NippleJS y is positive up
+
+            // --- Keyboard Input (Overrides Joystick if pressed) ---
+            if (keys.w || keys.ArrowUp) moveY = 1;
+            if (keys.s || keys.ArrowDown) moveY = -1;
+            if (keys.a || keys.ArrowLeft) moveX = -1;
+            if (keys.d || keys.ArrowRight) moveX = 1;
+
+            // --- Apply Movement ---
+            // Move player based on combined/prioritized input
+            // Horizontal movement
+            if (moveX > JOYSTICK_THRESHOLD && player.position.x < PLAYER_BOUNDS.x) {
+                player.position.x += PLAYER_SPEED;
+            } else if (moveX < -JOYSTICK_THRESHOLD && player.position.x > -PLAYER_BOUNDS.x) {
+                player.position.x -= PLAYER_SPEED;
+            }
+
+            // Vertical movement
+            if (moveY > JOYSTICK_THRESHOLD && player.position.y < PLAYER_BOUNDS.y + 2) {
+                player.position.y += PLAYER_SPEED;
+            } else if (moveY < -JOYSTICK_THRESHOLD && player.position.y > 1) {
+                player.position.y -= PLAYER_SPEED;
+            }
+
+            // Shooting is handled on key up / button press events, not in the main loop handleInput
+        }
+
+
+        // --- Player Logic ---
+        function movePlayer() {
+            // Player position is directly updated in handleInput
+            // Keep player Z position fixed relative to camera's base view
+             if (player) { // Ensure player exists
+                player.position.z = 10;
+             }
+        }
+
+        // --- Bullet Logic ---
+        function shootBullet() {
+            if (!gameRunning || !player) return; // Don't shoot if game over or player doesn't exist
+
+            const bulletGeometry = new THREE.SphereGeometry(0.2, 8, 8);
+            const bulletMaterial = new THREE.MeshBasicMaterial({ color: 0xffff00 }); // Yellow
+            const bullet = new THREE.Mesh(bulletGeometry, bulletMaterial);
+
+            // Start bullet slightly in front of the player
+            bullet.position.copy(player.position);
+            bullet.position.z -= 0.5;
+
+            bullets.push(bullet);
+            scene.add(bullet);
+        }
+
+        function moveBullets() {
+            for (let i = bullets.length - 1; i >= 0; i--) {
+                const bullet = bullets[i];
+                 // Check if bullet exists before accessing position
+                 if (!bullet || !bullet.parent) {
+                    bullets.splice(i, 1); // Clean up missing bullets
+                    continue;
+                 }
+                bullet.position.z -= BULLET_SPEED; // Move towards the horizon
+
+                // Remove bullet if it goes too far
+                if (bullet.position.z < -60) { // Increased range slightly
+                    scene.remove(bullet);
+                    bullets.splice(i, 1);
+                }
+            }
+        }
+
+        // --- Enemy Logic ---
+        function spawnEnemies() {
+             if (!gameRunning || bossActive) return; // Don't spawn if game over or boss is active
+
+            enemySpawnCounter++;
+            if (enemySpawnCounter >= ENEMY_SPAWN_RATE) {
+                enemySpawnCounter = 0;
+
+                const enemyGeometry = new THREE.BoxGeometry(1.5, 1.5, 1.5); // Slightly larger than player
+                const enemyMaterial = new THREE.MeshLambertMaterial({ color: 0xff0000 }); // Red
+                const enemy = new THREE.Mesh(enemyGeometry, enemyMaterial);
+
+                // Spawn ahead and at random positions within bounds
+                const spawnX = (Math.random() - 0.5) * PLAYER_BOUNDS.x * 2;
+                const spawnY = Math.random() * PLAYER_BOUNDS.y + 1; // Random height above ground
+                enemy.position.set(spawnX, spawnY, -50); // Start far away
+
+                enemies.push(enemy);
+                scene.add(enemy);
+            }
+        }
+
+        function moveEnemies() {
+            for (let i = enemies.length - 1; i >= 0; i--) {
+                const enemy = enemies[i];
+                 // Check if enemy exists
+                if (!enemy || !enemy.parent) {
+                    enemies.splice(i, 1);
+                    continue;
+                }
+                enemy.position.z += ENEMY_SPEED; // Move towards the player/camera
+
+                // Remove enemy if it passes the player
+                if (enemy.position.z > camera.position.z + 5) { // A bit behind the camera
+                    scene.remove(enemy);
+                    enemies.splice(i, 1);
+                }
+            }
+        }
+
+        // --- Boss Logic ---
+        function checkBossSpawn() {
+            if (!bossActive && score >= BOSS_TRIGGER_SCORE && !boss) {
+                spawnBoss();
+            }
+        }
+
+        function spawnBoss() {
+            bossActive = true;
+            bossHealth = BOSS_BASE_HEALTH; // Reset health
+            updateBossHealthUI();
+            document.getElementById('boss-health-ui').style.display = 'block'; // Show health bar
+
+            // Clear existing normal enemies for the boss fight
+            enemies.forEach(e => scene.remove(e));
+            enemies.length = 0;
+
+
+            // Create boss geometry (Tetrahedron - pyramid with triangular base)
+            const bossGeometry = new THREE.TetrahedronGeometry(3, 0); // Radius 3, detail 0 for sharp edges
+            const bossMaterial = new THREE.MeshLambertMaterial({ color: 0x0000ff }); // Blue
+            boss = new THREE.Mesh(bossGeometry, bossMaterial);
+
+            // Spawn boss far away, centered horizontally, slightly higher
+             const spawnY = PLAYER_BOUNDS.y / 2 + 1; // Center vertically in the playable upper area
+             boss.position.set(0, spawnY, -50); // Start far away, centered X
+
+            scene.add(boss);
+        }
+
+        function moveBoss() {
+            if (!boss || !bossActive) return;
+
+            // Simple forward movement for now
+            boss.position.z += BOSS_SPEED;
+
+            // Optional: Add side-to-side or other movement patterns here
+            // boss.position.x = Math.sin(Date.now() * 0.001) * PLAYER_BOUNDS.x * 0.8;
+
+
+            // Check if boss passed the player (shouldn't happen if player fights)
+            if (boss.position.z > camera.position.z + 10) {
+                 // Maybe penalize player or just remove boss? For now, remove.
+                removeBoss();
+            }
+        }
+
+        function damageBoss(amount) {
+            if (!bossActive || !boss) return;
+
+            bossHealth -= amount;
+            updateBossHealthUI();
+
+            // Add visual feedback (e.g., flash white) - Optional
+            // boss.material.color.setHex(0xffffff);
+            // setTimeout(() => { if(boss) boss.material.color.setHex(0x0000ff); }, 100);
+
+
+            if (bossHealth <= 0) {
+                score += 100; // Bonus points for defeating boss
+                updateUI();
+                removeBoss();
+                // Maybe trigger a "Stage Clear" or next level later
+            }
+        }
+
+        function removeBoss() {
+             if (boss) {
+                scene.remove(boss);
+             }
+            boss = null;
+            bossActive = false;
+            document.getElementById('boss-health-ui').style.display = 'none'; // Hide health bar
+            enemySpawnCounter = 0; // Reset enemy spawn timer
+        }
+
+        function updateBossHealthUI() {
+            document.getElementById('boss-health-ui').innerText = `Boss Health: ${Math.max(0, bossHealth)}`; // Don't show negative health
+        }
+
+
+        // --- Collision Detection ---
+         function checkCollisions() {
+             if (!gameRunning || !player) return; // Exit if game over or player missing
+
+            const playerBox = new THREE.Box3().setFromObject(player);
+
+            // Bullets vs Enemies
+            for (let i = bullets.length - 1; i >= 0; i--) {
+                const bullet = bullets[i];
+                // Ensure bullet still exists (might be removed in another check)
+                if (!bullet || !bullet.parent) continue;
+
+                const bulletBox = new THREE.Box3().setFromObject(bullet);
+
+                // Check collision with normal enemies
+                for (let j = enemies.length - 1; j >= 0; j--) {
+                    const enemy = enemies[j];
+                     if (!enemy || !enemy.parent) continue; // Ensure enemy exists
+
+                    const enemyBox = new THREE.Box3().setFromObject(enemy);
+
+                    if (bulletBox.intersectsBox(enemyBox)) {
+                        scene.remove(bullet);
+                        bullets.splice(i, 1);
+                        scene.remove(enemy);
+                        enemies.splice(j, 1);
+
+                        score += 10;
+                        updateUI();
+                        // Important: break inner loop once bullet hits something
+                        i = -1; // Exit outer loop as well since bullet is gone
+                        break;
+                    }
+                }
+                 // Check collision with Boss only if bullet still exists
+                 if (i >= 0 && bossActive && boss) {
+                     const bossBox = new THREE.Box3().setFromObject(boss);
+                     if (bulletBox.intersectsBox(bossBox)) {
+                         scene.remove(bullet);
+                         bullets.splice(i, 1);
+                         damageBoss(1); // Boss takes 1 damage per hit
+                         // Important: break inner loop once bullet hits something
+                         i = -1; // Exit outer loop as well since bullet is gone
+                         break;
+                     }
+                 }
+            }
+
+            // Player vs Enemies
+            for (let j = enemies.length - 1; j >= 0; j--) {
+                const enemy = enemies[j];
+                 if (!enemy || !enemy.parent) continue; // Ensure enemy exists
+                const enemyBox = new THREE.Box3().setFromObject(enemy);
+
+                if (playerBox.intersectsBox(enemyBox)) {
+                    scene.remove(enemy);
+                    enemies.splice(j, 1);
+                    playerHit();
+                    break; // Player hit one enemy this frame
+                }
+            }
+
+             // Player vs Boss
+            if (bossActive && boss) {
+                const bossBox = new THREE.Box3().setFromObject(boss);
+                if (playerBox.intersectsBox(bossBox)) {
+                    // Player hit boss - instant death or damage? Let's do damage.
+                    removeBoss(); // Boss disappears on collision for now
+                    playerHit();
+                }
+            }
+        }
+
+        function playerHit() {
+             if (!gameRunning) return; // Avoid multiple hits after game over
+             lives--;
+             updateUI();
+             // Add brief visual feedback (e.g., flash player) - Optional
+             // player.material.color.setHex(0xff0000);
+             // setTimeout(() => { if(player) player.material.color.setHex(0xffffff); }, 200);
+
+             if (lives <= 0) {
+                 gameOver();
+             }
+        }
+
+
+        // --- UI & Game State ---
+        function updateUI() {
+            document.getElementById('score').innerText = `Score: ${score}`;
+            document.getElementById('lives').innerText = `Lives: ${lives}`;
+        }
+
+       function gameOver() {
+            gameRunning = false;
+             if (joystickManager) { // Destroy joystick on game over
+                 joystickManager.destroy();
+                 joystickManager = null;
+             }
+             joystickDirection = { x: 0, y: 0 }; // Reset direction state
+
+            document.getElementById('message-text').innerText = `Game Over!\nFinal Score: ${score}`;
+            document.getElementById('message-box').style.display = 'block';
+            document.getElementById('controls-overlay').style.display = 'none'; // Hide controls
+
+            // Make restart button go back to start screen
+            document.getElementById('restart-button').onclick = () => {
+                document.getElementById('message-box').style.display = 'none';
+                document.getElementById('start-screen').style.display = 'flex';
+                document.getElementById('gameCanvas').style.display = 'none';
+                document.getElementById('ui').style.display = 'none';
+                document.getElementById('controls-overlay').style.display = 'none';
+                document.getElementById('boss-health-ui').style.display = 'none';
+
+                 // Clean up scene objects more thoroughly
+                 if(player) scene.remove(player); player = null;
+                 if(ground) scene.remove(ground); ground = null;
+                 if(boss) scene.remove(boss); boss = null;
+                 bullets.forEach(b => scene.remove(b)); bullets.length = 0;
+                 enemies.forEach(e => scene.remove(e)); enemies.length = 0;
+
+                 // Indicate that the scene needs full re-initialization
+                 gameInitialized = false;
+                 // Stop the animation loop explicitly if it hasn't stopped
+                 if (animationFrameId) {
+                    cancelAnimationFrame(animationFrameId);
+                    animationFrameId = null;
+                 }
+            };
+        }
+
+        // --- Window Resize ---
+        function onWindowResize() {
+             // Only resize if renderer and camera are initialized
+             if (!renderer || !camera || !gameInitialized) return;
+
+            const container = document.getElementById('game-container');
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+
+            camera.aspect = width / height;
+            camera.updateProjectionMatrix();
+            renderer.setSize(width, height);
+
+            // Optional: Re-initialize or reposition joystick if needed on resize
+            // if (gameRunning && joystickManager) {
+            //     joystickManager.destroy();
+            //     setupJoystick();
+            // }
+        }
+
+        // --- Start ---
+        // No automatic init; wait for user to click difficulty
+
+    </script>
+</body>
+</html>
